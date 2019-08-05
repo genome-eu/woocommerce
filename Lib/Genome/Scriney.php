@@ -20,8 +20,8 @@ use Genome\Lib\Psr\Log\NullLogger;
  */
 class Scriney implements ScrineyInterface
 {
-    const VALIDATION_TYPE_API = "API";
-    const VALIDATION_TYPE_CALLBACK = "CALLBACK";
+    const VALIDATION_TYPE_API = 'API';
+    const VALIDATION_TYPE_CALLBACK = 'CALLBACK';
 
     /** @var string */
     private $hostBase;
@@ -45,7 +45,7 @@ class Scriney implements ScrineyInterface
         LoggerInterface $logger = null,
         $hostBase = 'https://hpp-service.genome.eu/'
     ) {
-        $this->logger = is_null($logger) ? new NullLogger() : $logger;
+        $this->logger = $logger === null ? new NullLogger() : $logger;
         $this->hostBase = $hostBase;
 
         try {
@@ -53,27 +53,24 @@ class Scriney implements ScrineyInterface
         } catch (GeneralGenomeException $e) {
             $this->logger->error(
                 'Wrong init param',
-                [
+                array(
                     'exception' => $e,
-                ]
+                )
             );
 
             throw $e;
         } catch (\Exception $ex) {
             $this->logger->error(
                 'Initialization failed',
-                [
+                array(
                     'exception' => $ex,
-                ]
+                )
             );
 
             throw new GeneralGenomeException($ex->getMessage(), $ex);
         }
 
-        $this->logger->info(
-            'Scriney object successfully built',
-            []
-        );
+        $this->logger->info('Scriney object successfully built');
     }
 
     /**
@@ -89,18 +86,18 @@ class Scriney implements ScrineyInterface
         } catch (GeneralGenomeException $e) {
             $this->logger->error(
                 "Can't init rebill builder",
-                [
+                array(
                     'exception' => $e,
-                ]
+                )
             );
 
             throw $e;
         } catch (\Exception $ex) {
             $this->logger->error(
                 'Rebill builder initialization failed',
-                [
+                array(
                     'exception' => $ex,
-                ]
+                )
             );
 
             throw new GeneralGenomeException($ex->getMessage(), $ex);
@@ -121,18 +118,18 @@ class Scriney implements ScrineyInterface
         } catch (GeneralGenomeException $e) {
             $this->logger->error(
                 "Can't init button builder",
-                [
+                array(
                     'exception' => $e,
-                ]
+                )
             );
 
             throw $e;
         } catch (\Exception $ex) {
             $this->logger->error(
                 'Page builder initialization failed',
-                [
+                array(
                     'exception' => $ex,
-                ]
+                )
             );
 
             throw new GeneralGenomeException($ex->getMessage(), $ex);
@@ -162,18 +159,18 @@ class Scriney implements ScrineyInterface
         } catch (GeneralGenomeException $e) {
             $this->logger->error(
                 "Can't init stop subscription builder",
-                [
+                array(
                     'exception' => $e,
-                ]
+                )
             );
 
             throw $e;
         } catch (\Exception $ex) {
             $this->logger->error(
                 'Stop subscription builder initialization failed',
-                [
+                array(
                     'exception' => $ex,
-                ]
+                )
             );
 
             throw new GeneralGenomeException($ex->getMessage(), $ex);
@@ -193,26 +190,25 @@ class Scriney implements ScrineyInterface
             $refundBuilder =  new RefundBuilder(
                 $this->identity,
                 $transactionId,
-                $this->logger,
-                $this->hostBase
+                $this->logger
             );
 
             return $refundBuilder->send();
         } catch (GeneralGenomeException $e) {
             $this->logger->error(
                 "Can't init refund builder",
-                [
+                array(
                     'exception' => $e,
-                ]
+                )
             );
 
             throw $e;
         } catch (\Exception $ex) {
             $this->logger->error(
                 'Refund builder initialization failed',
-                [
+                array(
                     'exception' => $ex,
-                ]
+                )
             );
 
             throw new GeneralGenomeException($ex->getMessage(), $ex);
@@ -257,7 +253,7 @@ class Scriney implements ScrineyInterface
                 try {
                     $signatureHelper = new SignatureHelper();
                     $checkSum = null;
-                    $callbackData = [];
+                    $callbackData = array();
                     foreach ($data as $k => $v) {
                         if ($k !== 'checkSum') {
                             $callbackData[$k] = $v;
@@ -266,33 +262,24 @@ class Scriney implements ScrineyInterface
                         }
                     }
 
-                    if (is_null($checkSum)) {
-                        $this->logger->error(
-                            'checkSum field is required',
-                            []
-                        );
+                    if ( $checkSum === null ) {
+                        $this->logger->error('checkSum field is required');
                         return false;
                     }
 
                     if ($checkSum !== $signatureHelper->generate($callbackData, $this->identity->getPrivateKey())) {
-                        $this->logger->error(
-                            'Checksum validation failure',
-                            []
-                        );
+                        $this->logger->error('Checksum validation failure');
                         return false;
                     }
 
-                    $this->logger->info(
-                        'Checksum is valid',
-                        []
-                    );
+                    $this->logger->info('Checksum is valid');
                     return true;
                 } catch (\Exception $ex) {
                     $this->logger->error(
                         'Checksum validation failure',
-                        [
+                        array(
                             'exception' => $ex,
-                        ]
+                        )
                     );
 
                     throw new GeneralGenomeException($ex->getMessage(), $ex);
@@ -302,9 +289,9 @@ class Scriney implements ScrineyInterface
             default:
                 $this->logger->error(
                     'Invalid validation type received',
-                    [
+                    array(
                         'incomingType' => $validationType
-                    ]
+                    )
                 );
 
                 throw new GeneralGenomeException('Invalid validation type received');
@@ -332,18 +319,18 @@ class Scriney implements ScrineyInterface
         } catch (GeneralGenomeException $e) {
             $this->logger->error(
                 "Can't init cancel post trial builder",
-                [
+                array(
                     'exception' => $e,
-                ]
+                )
             );
 
             throw $e;
         } catch (\Exception $ex) {
             $this->logger->error(
                 'Cancel post trial builder initialization failed',
-                [
+                array(
                     'exception' => $ex,
-                ]
+                )
             );
 
             throw new GeneralGenomeException($ex->getMessage(), $ex);

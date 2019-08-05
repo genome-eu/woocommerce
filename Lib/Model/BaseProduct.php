@@ -110,7 +110,7 @@ class BaseProduct implements ProductInterface
     ) {
         $validator = new Validator();
         $type = $validator->validateString('productType', $type);
-        if (!in_array($type, [self::TYPE_SUBSCRIPTION, self::TYPE_TRIAL, self::TYPE_FIXED])) {
+        if (! in_array( $type, array( self::TYPE_SUBSCRIPTION, self::TYPE_TRIAL, self::TYPE_FIXED ), true ) ) {
             throw new GeneralGenomeException('Invalid product type given');
         }
 
@@ -119,53 +119,52 @@ class BaseProduct implements ProductInterface
         $this->productName = $validator->validateString('productName', $productName);
         $this->currency = $validator->validateString('currency', $currency, 3, 3);
         $this->amount = $validator->validateNumeric('amount', $amount);
-        $this->productDescription = is_null($productDescription) ?
+        $this->productDescription = $productDescription === null ?
             null :
             $validator->validateString('productDescription', $productDescription);
 
-        $this->discount = is_null($discount) ? null : $validator->validateNumeric('discount', $discount);
+        $this->discount = $discount === null ? null : $validator->validateNumeric('discount', $discount);
 
-        if (!is_null($discountType)) {
+        if ( $discountType !== null ) {
             $discountType = $validator->validateString('discountType', $discountType);
-            if (!in_array($discountType, [self::DISCOUNT_AMOUNT, self::DISCOUNT_PERCENT])) {
+            if (! in_array( $discountType, array( self::DISCOUNT_AMOUNT, self::DISCOUNT_PERCENT ), true ) ) {
                 throw new GeneralGenomeException('Invalid discount type given');
             }
             $this->discountType = $discountType;
         }
 
-        if (!is_null($subscriptionLength) && $this->type === self::TYPE_SUBSCRIPTION) {
+        if ( $subscriptionLength !== null && $this->type === self::TYPE_SUBSCRIPTION) {
             $this->subscriptionLength = $validator->validateNumeric('subscriptionLength', $subscriptionLength);
             $subscriptionPeriod = $validator->validateString('subscriptionPeriod', $subscriptionPeriod);
 
-            if (!in_array(
-                $subscriptionPeriod,
-                [
-                    self::SUBSCRIPTION_24H,
-                    self::SUBSCRIPTION_7D,
-                    self::SUBSCRIPTION_30D,
-                    self::SUBSCRIPTION_365D
-                ]
-            )) {
+            if (! in_array( $subscriptionPeriod,
+	            array(
+		            self::SUBSCRIPTION_24H,
+		            self::SUBSCRIPTION_7D,
+		            self::SUBSCRIPTION_30D,
+		            self::SUBSCRIPTION_365D
+	            ),
+	            true ) ) {
                 throw new GeneralGenomeException('Invalid subscription period given');
             }
 
             $this->subscriptionPeriod = $subscriptionPeriod;
 
-            $this->subscriptionBillingCycles = is_null($subscriptionBillingCycles) ?
+            $this->subscriptionBillingCycles = $subscriptionBillingCycles === null ?
             null :
             $validator->validateNumeric('subscriptionBillingCycles', $subscriptionBillingCycles);
 
 
-            $this->subscriptionEndDate = is_null($subscriptionEndDate) ?
+            $this->subscriptionEndDate = $subscriptionEndDate === null ?
             null :
             $validator->validateNumeric('subscriptionEndDate', $subscriptionEndDate);
         }
 
-        if (!is_null($postTrialProductId) && $this->type === self::TYPE_TRIAL) {
+        if ( $postTrialProductId !== null && $this->type === self::TYPE_TRIAL) {
             $this->postTrialProductId = $validator->validateString('postTrialProductId', $postTrialProductId);
             $this->postTrialLength = $validator->validateNumeric('postTrialLength', $postTrialLength);
             $postTrialPeriod = $validator->validateString('postTrialPeriod', $postTrialPeriod);
-            if (!in_array($postTrialPeriod, [self::TRIAL_24H, self::TRIAL_7D, self::TRIAL_30D, self::TRIAL_365D])) {
+            if (! in_array( $postTrialPeriod, array( self::TRIAL_24H, self::TRIAL_7D, self::TRIAL_30D, self::TRIAL_365D ), true ) ) {
                 throw new GeneralGenomeException('Invalid post trial period given');
             }
             $this->postTrialPeriod = $postTrialPeriod;
@@ -175,45 +174,45 @@ class BaseProduct implements ProductInterface
     /** @return array */
     public function toHashMap()
     {
-        $result = [
+        $result = array(
             'productType' => $this->type,
             'productId' => $this->productId,
             'productName' => $this->productName,
             'currency' => $this->currency,
             'amount' => $this->amount
-        ];
+        );
 
-        if (!is_null($this->discount) && !is_null($this->discountType)) {
+        if ( $this->discount !== null && $this->discountType !== null ) {
             $result['discount'] = $this->discount;
             $result['discountType'] = $this->discountType;
         }
 
-        if (!is_null($this->productDescription)) {
+        if ( $this->productDescription !== null ) {
             $result['productDescription'] = $this->productDescription;
         }
 
         //Subscription section
-        if (!is_null($this->subscriptionLength)) {
-            $result['subscriptionLength'] = intval($this->subscriptionLength);
+        if ( $this->subscriptionLength !== null ) {
+            $result['subscriptionLength'] = (int) $this->subscriptionLength;
         }
-        if (!is_null($this->subscriptionPeriod)) {
+        if ( $this->subscriptionPeriod !== null ) {
             $result['subscriptionPeriod'] = $this->subscriptionPeriod;
         }
-        if (!is_null($this->subscriptionBillingCycles)) {
-            $result['subscriptionBillingCycles'] = intval($this->subscriptionBillingCycles);
+        if ( $this->subscriptionBillingCycles !== null ) {
+            $result['subscriptionBillingCycles'] = (int) $this->subscriptionBillingCycles;
         }
-        if (!is_null($this->subscriptionEndDate)) {
+        if ( $this->subscriptionEndDate !== null ) {
             $result['subscriptionEndDate'] = $this->subscriptionEndDate;
         }
 
         //Post trial section
-        if (!is_null($this->postTrialProductId)) {
+        if ( $this->postTrialProductId !== null ) {
             $result['postTrialProductId'] = $this->postTrialProductId;
         }
-        if (!is_null($this->postTrialLength)) {
-            $result['trialLength'] = intval($this->postTrialLength);
+        if ( $this->postTrialLength !== null ) {
+            $result['trialLength'] = (int) $this->postTrialLength;
         }
-        if (!is_null($this->postTrialPeriod)) {
+        if ( $this->postTrialPeriod !== null ) {
             $result['trialPeriod'] = $this->postTrialPeriod;
         }
 

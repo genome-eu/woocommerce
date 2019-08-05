@@ -4,12 +4,11 @@ namespace Genome\Lib\Component;
 
 use Genome\Lib\Exception\GeneralGenomeException;
 use Genome\Lib\Model\IdentityInterface;
+use Genome\Lib\Psr\Log\LoggerInterface;
 use Genome\Lib\Util\ClientInterface;
 use Genome\Lib\Util\CurlClient;
 use Genome\Lib\Util\SignatureHelper;
 use Genome\Lib\Util\Validator;
-use Genome\Lib\Util\ValidatorInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Class CancelPostTrialBuilder
@@ -29,12 +28,6 @@ class CancelPostTrialBuilder extends BaseBuilder
     /** @var ClientInterface */
     private $client;
 
-    /** @var ValidatorInterface */
-    private $validator;
-
-    /** @var string */
-    private $baseHost;
-
     /** @var SignatureHelper */
     private $signatureHelper;
 
@@ -53,10 +46,10 @@ class CancelPostTrialBuilder extends BaseBuilder
     ) {
         parent::__construct($logger);
 
-        $this->validator = new Validator();
+        $validator = new Validator();
         $this->identity = $identity;
-        $this->transactionId = $this->validator->validateString('transactionId', $transactionId);
-        $this->baseHost = $this->validator->validateString('baseHost', $baseHost);
+        $this->transactionId = $validator->validateString('transactionId', $transactionId);
+        $validator->validateString('baseHost', $baseHost);
         $this->signatureHelper  = new SignatureHelper();
 
         $this->client = new CurlClient($baseHost . $this->action, $logger);
@@ -69,10 +62,10 @@ class CancelPostTrialBuilder extends BaseBuilder
      */
     public function send()
     {
-        $data = [
+        $data = array(
             'transactionId' => $this->transactionId,
             'publicKey' => $this->identity->getPublicKey()
-        ];
+        );
 
         $data['signature'] = $this->signatureHelper->generate(
             $data,

@@ -3,7 +3,7 @@
 namespace Genome\Lib\Util;
 
 use Genome\Lib\Exception\GeneralGenomeException;
-use Psr\Log\LoggerInterface;
+use Genome\Lib\Psr\Log\LoggerInterface;
 
 /**
  * Class CurlClient
@@ -58,52 +58,55 @@ class CurlClient implements ClientInterface
 
         $this->logger->info(
             'Received answer',
-            [
+            array(
                 'packetSize' => strlen($result),
                 'time' => microtime(true) - $start,
-            ]
+            )
         );
 
-        if ($errno === CURLE_OPERATION_TIMEOUTED) {
-            $e = new GeneralGenomeException('Client timeout');
-            $this->logger->error(
-                $e->getMessage(),
-                [
-                    'exception' => $e
-                ]
-            );
+	    if ( $errno === CURLE_OPERATION_TIMEOUTED ) {
+	        $e = new GeneralGenomeException('Client timeout');
+	        $this->logger->error(
+	            $e->getMessage(),
+	            array(
+	                'exception' => $e
+	            )
+	        );
 
-            throw $e;
-        } elseif ($errno === CURLE_SSL_CACERT
-            || $errno === CURLE_SSL_CERTPROBLEM
-            || $errno === CURLE_SSL_CIPHER
-            || $errno === CURLE_SSL_CONNECT_ERROR
-            || $errno === CURLE_SSL_PEER_CERTIFICATE
-            || $errno === CURLE_SSL_ENGINE_NOTFOUND
-            || $errno === CURLE_SSL_ENGINE_SETFAILED
-        ) {
-            $e = new GeneralGenomeException('Client SSL error, code ' . $error, null, intval($errno));
-            $this->logger->error(
-                $e->getMessage(),
-                ['exception' => $e, 'errno' => $errno]
-            );
+	        throw $e;
+	    }
 
-            throw $e;
-        } elseif ($errno !== CURLE_OK) {
-            $e = new GeneralGenomeException('Client error ' . $error, null, intval($errno));
-            $this->logger->error(
-                $e->getMessage(),
-                ['exception' => $e, 'errno' => $errno]
-            );
+	    if ( $errno === CURLE_SSL_CACERT
+		     || $errno === CURLE_SSL_CERTPROBLEM
+		     || $errno === CURLE_SSL_CIPHER
+		     || $errno === CURLE_SSL_CONNECT_ERROR
+		     || $errno === CURLE_SSL_PEER_CERTIFICATE
+		     || $errno === CURLE_SSL_ENGINE_NOTFOUND
+		     || $errno === CURLE_SSL_ENGINE_SETFAILED ) {
+			     $e = new GeneralGenomeException('Client SSL error, code ' . $error, null, $errno );
+			     $this->logger->error(
+			         $e->getMessage(),
+			         array( 'exception' => $e, 'errno' => $errno )
+			     );
 
-            throw $e;
-        }
+			     throw $e;
+			 }
 
-        if ($result === false) {
+	    if ( $errno !== CURLE_OK ) {
+	        $e = new GeneralGenomeException('Client error ' . $error, null, $errno );
+	        $this->logger->error(
+	            $e->getMessage(),
+	            array( 'exception' => $e, 'errno' => $errno )
+	        );
+
+	        throw $e;
+	    }
+
+	    if ($result === false) {
             $e = new GeneralGenomeException(sprintf('Curl error. Received status %s, curl error %s', $status, $error));
             $this->logger->error(
                 $e->getMessage(),
-                ['exception' => $e, 'status' => $status]
+                array( 'exception' => $e, 'status' => $status )
             );
 
             throw $e;
@@ -116,7 +119,7 @@ class CurlClient implements ClientInterface
             $error = new GeneralGenomeException('Failed to decode answer', $exception);
             $this->logger->error(
                 $error->getMessage(),
-                ['exception' => $error]
+                array( 'exception' => $error )
             );
             throw $error;
         }
@@ -143,13 +146,13 @@ class CurlClient implements ClientInterface
             $e = new GeneralGenomeException($message, null, json_last_error());
             $this->logger->error(
                 $e->getMessage(),
-                ['exception' => $e]
+                array( 'exception' => $e )
             );
 
             throw $e;
         }
 
-        $this->logger->info('Packet successfully decoded', []);
+        $this->logger->info('Packet successfully decoded' );
 
         return $data;
     }

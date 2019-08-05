@@ -2,8 +2,11 @@
 
 namespace Genome\Lib\Model;
 
+use Genome\Lib\Exception\GeneralGenomeException;
+
 /**
  * Class SubscriptionProduct
+ *
  * @package Genome\Lib\Model
  */
 class SubscriptionProduct extends BaseProduct
@@ -20,7 +23,7 @@ class SubscriptionProduct extends BaseProduct
      * @param int|float|null $discount
      * @param string|null $discountType
      * @param string|null $productDescription
-     * @throws \Genome\Lib\Exception\GeneralGenomeException
+     * @throws GeneralGenomeException
      */
     public function __construct(
         $productId,

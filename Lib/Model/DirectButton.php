@@ -23,16 +23,15 @@ class DirectButton extends BaseButton
         $this->baseHost = $baseHost;
     }
 
-    /** @return string */
     public function build()
     {
-        $body = "";
+        $body = '';
         foreach ($this->fieldList as $k => $v) {
             $body .= "<input type='hidden' name='{$k}' value='{$v}'>";
         }
 
-        $this->buttonCode = str_replace("#action", $this->baseHost . 'hpp', $this->codeStart) .
-            $body .
+        $this->buttonCode = str_replace( '#action', $this->baseHost . 'hpp', $this->codeStart) .
+                            $body .
             $this->codeEnd;
     }
 }

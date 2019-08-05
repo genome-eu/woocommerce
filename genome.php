@@ -263,6 +263,9 @@ function wc_genome_gateway_init() {
 		}
 
 		public function genome_payment_completed() {
+			$x = file_get_contents( 'php://input' );
+			var_dump($_POST);
+			var_dump($x);
 			if ( isset( $_POST['transactionId'], $_POST['productList'] ) && ! empty( $_POST['productList'] ) ) {
 				$order_id = (int) trim( strip_tags( $_POST['productList'][0]['productId'] ) );
 

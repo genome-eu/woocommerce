@@ -20,10 +20,9 @@ class SignatureHelper
     {
         if (count($mixed) < 1) {
             throw new \InvalidArgumentException('Data argument cant be empty');
-        } else {
-            $this->checkRecursive($mixed);
         }
-        if (!is_string($secret)) {
+	    $this->checkRecursive($mixed);
+	    if (!is_string($secret)) {
             throw new \InvalidArgumentException('Secret must be string');
         }
         if (!is_bool($inLowercase)) {
@@ -69,17 +68,17 @@ class SignatureHelper
     public function implodeRecursive(array $data, $prefix = null)
     {
         if ($prefix !== null && !is_string($prefix)) {
-            throw new \InvalidArgumentException("Prefix must be string");
+            throw new \InvalidArgumentException( 'Prefix must be string' );
         }
 
-        $out = "";
+        $out = '';
         ksort($data);
 
         foreach ($data as $key => $elm) {
             $key = $prefix !== null ? "{$prefix}.{$key}" : $key;
 
             if (is_array($elm)) {
-                $out .= $this->implodeRecursive($elm, strval($key));
+                $out .= $this->implodeRecursive($elm, (string) $key );
                 continue;
             }
 

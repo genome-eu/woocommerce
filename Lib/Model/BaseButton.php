@@ -2,6 +2,7 @@
 
 namespace Genome\Lib\Model;
 
+use Genome\Lib\Exception\GeneralGenomeException;
 use Genome\Lib\Util\SignatureHelper;
 use Genome\Lib\Util\StringHelper;
 
@@ -15,10 +16,10 @@ abstract class BaseButton implements RenderableInterface
     protected $builderScriptName = 'paymentPage';
 
     /** @var string[] */
-    protected $fieldList = [];
+    protected $fieldList = array();
 
     /** @var string[] */
-    private $unsafeFieldList = [];
+    private $unsafeFieldList = array();
 
     /** @var string */
     protected $buttonCode = '';
@@ -57,7 +58,10 @@ abstract class BaseButton implements RenderableInterface
     /** @return void */
     abstract public function build();
 
-    /** @return string */
+	/**
+	 * @return string
+	 * @throws GeneralGenomeException
+	 */
     public function asString()
     {
         $this->setSignature();
@@ -71,13 +75,19 @@ abstract class BaseButton implements RenderableInterface
         return $this->buttonCode;
     }
 
-    /** @return void */
+	/**
+	 * @return void
+	 * @throws GeneralGenomeException
+	 */
     public function display()
     {
         echo $this->asString();
     }
 
-    /** @return string */
+	/**
+	 * @return string
+	 * @throws GeneralGenomeException
+	 */
     public function __toString()
     {
         return $this->asString();

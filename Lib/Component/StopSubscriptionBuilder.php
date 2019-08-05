@@ -4,12 +4,11 @@ namespace Genome\Lib\Component;
 
 use Genome\Lib\Exception\GeneralGenomeException;
 use Genome\Lib\Model\IdentityInterface;
+use Genome\Lib\Psr\Log\LoggerInterface;
 use Genome\Lib\Util\ClientInterface;
 use Genome\Lib\Util\CurlClient;
 use Genome\Lib\Util\SignatureHelper;
 use Genome\Lib\Util\Validator;
-use Genome\Lib\Util\ValidatorInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Class StopSubscriptionBuilder
@@ -23,15 +22,6 @@ class StopSubscriptionBuilder extends BaseBuilder
     /** @var IdentityInterface */
     private $identity;
 
-    /** @var ValidatorInterface */
-    private $validator;
-
-    /** @var LoggerInterface */
-    private $logger;
-
-    /** @var string */
-    private $baseHost;
-
     /** @var string */
     private $userId;
 
@@ -44,13 +34,14 @@ class StopSubscriptionBuilder extends BaseBuilder
     /** @var SignatureHelper */
     private $signatureHelper;
 
-    /**
-     * @param IdentityInterface $identity
-     * @param string $userId
-     * @param string $transactionId
-     * @param LoggerInterface $logger
-     * @param string $baseHost
-     */
+	/**
+	 * @param IdentityInterface $identity
+	 * @param string $userId
+	 * @param string $transactionId
+	 * @param LoggerInterface $logger
+	 * @param string $baseHost
+	 * @throws GeneralGenomeException
+	 */
     public function __construct(
         IdentityInterface $identity,
         $userId,
@@ -60,16 +51,14 @@ class StopSubscriptionBuilder extends BaseBuilder
     ) {
         parent::__construct($logger);
 
-        $this->validator = new Validator();
+        $validator = new Validator();
         $this->identity = $identity;
-        $this->logger = $logger;
-        $this->userId = $this->validator->validateString('userId', $userId);
-        $this->transactionId = $this->validator->validateString('transactionId', $transactionId);
-        $this->baseHost = $baseHost;
-        $this->client = new CurlClient($this->baseHost . $this->action, $logger);
+        $this->userId = $validator->validateString('userId', $userId);
+        $this->transactionId = $validator->validateString('transactionId', $transactionId);
+        $this->client = new CurlClient($baseHost . $this->action, $logger);
         $this->signatureHelper  = new SignatureHelper();
 
-        $this->logger->info('Stop subscription builder successfully initialized');
+        $logger->info('Stop subscription builder successfully initialized');
     }
 
     /**
@@ -78,11 +67,11 @@ class StopSubscriptionBuilder extends BaseBuilder
      */
     public function send()
     {
-        $data = [
+        $data = array(
             'uniqueUserId' => $this->userId,
             'transactionId' => $this->transactionId,
             'publicKey' => $this->identity->getPublicKey()
-        ];
+        );
 
         $data['signature'] = $this->signatureHelper->generate(
             $data,

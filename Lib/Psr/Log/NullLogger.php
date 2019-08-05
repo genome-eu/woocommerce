@@ -2,8 +2,6 @@
 
 namespace Genome\Lib\Psr\Log;
 
-use Genome\Lib\Psr\Log\LoggerInterface;
-
 class NullLogger implements LoggerInterface
 {
     /**

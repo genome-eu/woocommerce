@@ -5,11 +5,10 @@ namespace Genome\Lib\Component;
 use Genome\Lib\Exception\GeneralGenomeException;
 use Genome\Lib\Model\IdentityInterface;
 use Genome\Lib\Model\ProductInterface;
+use Genome\Lib\Psr\Log\LoggerInterface;
 use Genome\Lib\Util\CurlClient;
 use Genome\Lib\Util\SignatureHelper;
 use Genome\Lib\Util\Validator;
-use Genome\Lib\Util\ValidatorInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Class RebillBuilder
@@ -22,9 +21,6 @@ class RebillBuilder extends BaseBuilder
 
     /** @var string */
     private $baseHost;
-
-    /** @var ValidatorInterface */
-    private $validator;
 
     /** @var IdentityInterface */
     private $identity;
@@ -47,22 +43,23 @@ class RebillBuilder extends BaseBuilder
     /** @var CurlClient */
     private $client;
 
-    /**
-     * @param IdentityInterface $identity
-     * @param string $billToken
-     * @param string $userId
-     * @param string $baseHost
-     * @param LoggerInterface $logger
-     */
+	/**
+	 * @param IdentityInterface $identity
+	 * @param string $billToken
+	 * @param string $userId
+	 * @param string $baseHost
+	 * @param LoggerInterface $logger
+	 * @throws GeneralGenomeException
+	 */
     public function __construct(IdentityInterface $identity, $billToken, $userId, LoggerInterface $logger, $baseHost)
     {
         parent::__construct($logger);
-        $this->validator = new Validator();
+        $validator = new Validator();
         $this->identity = $identity;
         $this->logger = $logger;
-        $this->baseHost = $this->validator->validateString('baseHost', $baseHost);
-        $this->billToken = $this->validator->validateString('billToken', $billToken);
-        $this->userId = $this->validator->validateString('userId', $userId);
+        $validator->validateString('baseHost', $baseHost);
+        $this->billToken = $validator->validateString('billToken', $billToken);
+        $this->userId = $validator->validateString('userId', $userId);
         $this->signatureHelper  = new SignatureHelper();
         $this->client = new CurlClient($this->baseHost . $this->action, $logger);
 
@@ -89,17 +86,17 @@ class RebillBuilder extends BaseBuilder
      */
     public function send()
     {
-        $preparedData = [
+        $preparedData = array(
             'publicKey' => $this->identity->getPublicKey(),
             'uniqueUserId' => $this->userId,
             'rebillToken' => $this->billToken,
-        ];
+        );
 
-        if (!is_null($this->productId)) {
+        if ( $this->productId !== null ) {
             $preparedData['productId'] = $this->productId;
         }
 
-        if (!is_null($this->userInfo)) {
+        if ( $this->userInfo !== null ) {
             $preparedData = array_merge($preparedData, $this->userInfo->toHashMap());
         }
 
@@ -109,7 +106,7 @@ class RebillBuilder extends BaseBuilder
             }
         }
 
-        if (!is_null($this->customProduct)) {
+        if ( $this->customProduct !== null ) {
             $preparedData = array_merge($preparedData, $this->customProduct->toHashMap());
         }
 

@@ -18,16 +18,12 @@ class StringHelper
      */
     public function encodeHtmlAttribute($string)
     {
-        //This function copied from TWIG
-        if (!is_string($string)) {
-            throw new NotStringException('string');
-        }
-        if (0 == strlen($string) ? false : (1 == preg_match('/^./su', $string) ? false : true)) {
+        if (!is_string($string) || $string === '') {
             throw new NotStringException('string');
         }
 
         $string = preg_replace_callback(
-            '#[^a-zA-Z0-9,\.\-_]#Su',
+            '#[^a-zA-Z0-9,.\-_]#Su',
             function ($matches) {
                 $entityMap = array(
                     34 => 'quot',
@@ -38,11 +34,11 @@ class StringHelper
                 $chr = $matches[0];
                 $ord = ord($chr);
 
-                if (($ord <= 0x1f && $chr != "\t" && $chr != "\n" && $chr != "\r") || ($ord >= 0x7f && $ord <= 0x9f)) {
+                if (($ord <= 0x1f && $chr !== "\t" && $chr !== "\n" && $chr !== "\r") || ($ord >= 0x7f && $ord <= 0x9f)) {
                     return '&#xFFFD;';
                 }
 
-                if (strlen($chr) == 1) {
+                if (strlen($chr) === 1) {
                     $hex = strtoupper(substr('00'.bin2hex($chr), -2));
                 } else {
                     $chr = mb_convert_encoding($chr, 'UTF-16BE', 'UTF-8');

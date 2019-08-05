@@ -58,25 +58,25 @@ class UserInfo implements UserInfoInterface
     ) {
         $validator = new Validator();
         $this->email = $validator->validateString('email', $email);
-        if (!is_null($firstName)) {
+        if ( $firstName !== null ) {
             $this->firstName = $validator->validateString('firstName', $firstName);
         }
-        if (!is_null($lastName)) {
+        if ( $lastName !== null ) {
             $this->lastName = $validator->validateString('lastName', $lastName);
         }
-        if (!is_null($ISO3Country)) {
+        if ( $ISO3Country !== null ) {
             $this->ISO3Country = $validator->validateString('ISO3Country', $ISO3Country, 3, 3);
         }
-        if (!is_null($city)) {
+        if ( $city !== null ) {
             $this->city = $validator->validateString('city', $city);
         }
-        if (!is_null($postalCode)) {
+        if ( $postalCode !== null ) {
             $this->postalCode = $validator->validateString('postalCode', $postalCode);
         }
-        if (!is_null($address)) {
+        if ( $address !== null ) {
             $this->address = $validator->validateString('address', $address);
         }
-        if (!is_null($phone)) {
+        if ( $phone !== null ) {
             $this->phone = $validator->validateString('phone', $phone);
         }
     }
@@ -85,29 +85,29 @@ class UserInfo implements UserInfoInterface
     /** @return array */
     public function toHashMap()
     {
-        $result = [
+        $result = array(
             'email' => $this->email,
-        ];
+        );
 
-        if (!is_null($this->firstName)) {
+        if ( $this->firstName !== null ) {
             $result['firstName'] = $this->firstName;
         }
-        if (!is_null($this->lastName)) {
+        if ( $this->lastName !== null ) {
             $result['lastName'] = $this->lastName;
         }
-        if (!is_null($this->ISO3Country)) {
+        if ( $this->ISO3Country !== null ) {
             $result['country'] = $this->ISO3Country;
         }
-        if (!is_null($this->city)) {
+        if ( $this->city !== null ) {
             $result['city'] = $this->city;
         }
-        if (!is_null($this->address)) {
+        if ( $this->address !== null ) {
             $result['address'] = $this->address;
         }
-        if (!is_null($this->postalCode)) {
+        if ( $this->postalCode !== null ) {
             $result['zip'] = $this->postalCode;
         }
-        if (!is_null($this->phone)) {
+        if ( $this->phone !== null ) {
             $result['phone'] = $this->phone;
         }
 

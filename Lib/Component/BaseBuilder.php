@@ -5,9 +5,9 @@ namespace Genome\Lib\Component;
 use Genome\Lib\Exception\EmptyArgumentException;
 use Genome\Lib\Exception\GeneralGenomeException;
 use Genome\Lib\Model\UserInfoInterface;
+use Genome\Lib\Psr\Log\LoggerInterface;
 use Genome\Lib\Util\Validator;
 use Genome\Lib\Util\ValidatorInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Class BaseBuilder
@@ -21,7 +21,7 @@ abstract class BaseBuilder
     protected $userInfo;
 
     /** @var array */
-    protected $customParams = [];
+    protected $customParams = array();
 
     /** @var string|null */
     protected $productId;
@@ -67,7 +67,7 @@ abstract class BaseBuilder
         }
 
         foreach ($params as $paramName => $paramValue) {
-            if (mb_substr($paramName, 0, 7) !== self::CUSTOM_PARAM_PREFIX) {
+            if ( mb_strpos( $paramName, self::CUSTOM_PARAM_PREFIX ) !== 0 ) {
                 $this->logger->error('Custom param name must start with prefix - ' . self::CUSTOM_PARAM_PREFIX);
                 throw new GeneralGenomeException('Invalid custom param key');
             }
@@ -96,9 +96,9 @@ abstract class BaseBuilder
         } catch (GeneralGenomeException $e) {
             $this->logger->error(
                 'Invalid product id',
-                [
+                array(
                     'exception' => $e,
-                ]
+                )
             );
 
             throw $e;
@@ -116,7 +116,7 @@ abstract class BaseBuilder
             $e = new GeneralGenomeException('Invalid response format');
             $this->logger->error(
                 $e->getMessage(),
-                ['exception' => $e]
+                array( 'exception' => $e )
             );
 
             throw $e;
@@ -128,7 +128,7 @@ abstract class BaseBuilder
             );
             $this->logger->error(
                 $e->getMessage(),
-                ['exception' => $e]
+                array( 'exception' => $e )
             );
 
             throw $e;
@@ -138,7 +138,7 @@ abstract class BaseBuilder
             $e = new GeneralGenomeException('Invalid response format from server');
             $this->logger->error(
                 $e->getMessage(),
-                ['exception' => $e]
+                array( 'exception' => $e )
             );
 
             throw $e;

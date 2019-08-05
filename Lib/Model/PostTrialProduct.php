@@ -2,8 +2,11 @@
 
 namespace Genome\Lib\Model;
 
+use Genome\Lib\Exception\GeneralGenomeException;
+
 /**
  * Class PostTrialProduct
+ *
  * @package Genome\Lib\Model
  */
 class PostTrialProduct extends BaseProduct
@@ -17,7 +20,7 @@ class PostTrialProduct extends BaseProduct
      * @param int $trialLength
      * @param string $trialPeriod
      * @param string|null $productDescription
-     * @throws \Genome\Lib\Exception\GeneralGenomeException
+     * @throws GeneralGenomeException
      */
     public function __construct(
         $productId,

@@ -3,14 +3,12 @@
 namespace Genome\Lib\Component;
 
 use Genome\Lib\Exception\GeneralGenomeException;
-use Genome\Lib\Exception\NotBooleanException;
 use Genome\Lib\Model\IdentityInterface;
+use Genome\Lib\Psr\Log\LoggerInterface;
 use Genome\Lib\Util\ClientInterface;
 use Genome\Lib\Util\CurlClient;
 use Genome\Lib\Util\SignatureHelper;
 use Genome\Lib\Util\Validator;
-use Genome\Lib\Util\ValidatorInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Class RefundBuilder
@@ -23,12 +21,6 @@ class RefundBuilder extends BaseBuilder
 
     /** @var IdentityInterface */
     private $identity;
-
-    /** @var ValidatorInterface */
-    private $validator;
-
-    /** @var LoggerInterface */
-    private $logger;
 
     /** @var string */
     private $baseHost;
@@ -46,26 +38,22 @@ class RefundBuilder extends BaseBuilder
      * @param IdentityInterface $identity
      * @param string $transactionId
      * @param LoggerInterface $logger
-     * @param string $baseHost
      * @throws GeneralGenomeException
      */
     public function __construct(
         IdentityInterface $identity,
         $transactionId,
-        LoggerInterface $logger,
-        $baseHost
+        LoggerInterface $logger
     ) {
         parent::__construct($logger);
 
-        $this->validator = new Validator();
+        $validator = new Validator();
         $this->identity = $identity;
-        $this->logger = $logger;
-        $this->transactionId = $this->validator->validateString('transactionId', $transactionId);
-        $this->baseHost = $baseHost;
+        $this->transactionId = $validator->validateString('transactionId', $transactionId);
         $this->client = new CurlClient($this->baseHost . $this->action, $logger);
         $this->signatureHelper  = new SignatureHelper();
 
-        $this->logger->info('Refund builder successfully initialized');
+        $logger->info('Refund builder successfully initialized');
     }
 
     /**
@@ -74,10 +62,10 @@ class RefundBuilder extends BaseBuilder
      */
     public function send()
     {
-        $data = [
+        $data = array(
             'transactionId' => $this->transactionId,
             'publicKey' => $this->identity->getPublicKey()
-        ];
+        );
 
         $data['signature'] = $this->signatureHelper->generate(
             $data,

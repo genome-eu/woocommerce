@@ -4,7 +4,6 @@ namespace Genome\Lib\Util;
 
 use Genome\Lib\Exception\EmptyArgumentException;
 use Genome\Lib\Exception\GeneralGenomeException;
-use Genome\Lib\Exception\InvalidEncodingException;
 use Genome\Lib\Exception\InvalidStringLengthException;
 use Genome\Lib\Exception\NotNumericException;
 use Genome\Lib\Exception\NotStringException;
@@ -31,11 +30,12 @@ class Validator implements ValidatorInterface
         if (!is_string($value)) {
             throw new NotStringException($paramName);
         }
-        if (mb_strlen($value, $this->encoding) === 0) {
+        if ( $value === '' ) {
             throw new EmptyArgumentException($paramName);
         }
-        if (!is_null($maxLength) && is_int($maxLength)) {
-            if (mb_strlen($value, $this->encoding) > $maxLength ||  mb_strlen($value, $this->encoding) < $minLength) {
+        if ( $maxLength !== null && is_int($maxLength)) {
+	        $length = mb_strlen( $value, $this->encoding );
+	        if ( $length > $maxLength || $length < $minLength) {
                 throw new InvalidStringLengthException($paramName, $minLength, $maxLength);
             }
         }

@@ -11,9 +11,9 @@ use Genome\Lib\Model\IdentityInterface;
 use Genome\Lib\Model\PopupButton;
 use Genome\Lib\Model\ProductInterface;
 use Genome\Lib\Model\RenderableInterface;
+use Genome\Lib\Psr\Log\LoggerInterface;
 use Genome\Lib\Util\Validator;
 use Genome\Lib\Util\ValidatorInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Class ButtonBuilder
@@ -44,7 +44,7 @@ class ButtonBuilder extends BaseBuilder
     private $buttonText = 'Pay';
 
     /** @var productInterface[] */
-    private $customProducts = [];
+    private $customProducts = array();
 
     /** @var string */
     private $baseHost;
@@ -55,12 +55,13 @@ class ButtonBuilder extends BaseBuilder
     /** @var string|null */
     private $declineUrl;
 
-    /**
-     * @param IdentityInterface $identity
-     * @param string $userId
-     * @param LoggerInterface $logger
-     * @param string $baseHost
-     */
+	/**
+	 * @param IdentityInterface $identity
+	 * @param string $userId
+	 * @param LoggerInterface $logger
+	 * @param string $baseHost
+	 * @throws GeneralGenomeException
+	 */
     public function __construct(IdentityInterface $identity, $userId, LoggerInterface $logger, $baseHost)
     {
         parent::__construct($logger);
@@ -88,9 +89,9 @@ class ButtonBuilder extends BaseBuilder
         } catch (GeneralGenomeException $e) {
             $this->logger->error(
                 'Invalid success url',
-                [
+                array(
                     'exception' => $e,
-                ]
+                )
             );
 
             throw $e;
@@ -113,9 +114,9 @@ class ButtonBuilder extends BaseBuilder
         } catch (GeneralGenomeException $e) {
             $this->logger->error(
                 'Invalid decline url',
-                [
+                array(
                     'exception' => $e,
-                ]
+                )
             );
 
             throw $e;
@@ -157,9 +158,9 @@ class ButtonBuilder extends BaseBuilder
         } catch (GeneralGenomeException $e) {
             $this->logger->error(
                 'Invalid button text',
-                [
+                array(
                     'exception' => $e,
-                ]
+                )
             );
 
             throw $e;
@@ -229,24 +230,24 @@ class ButtonBuilder extends BaseBuilder
         $button->pushValue('buttontext', $this->buttonText);
         $button->pushValue('uniqueuserid', $this->userId);
         $button->pushValue('displaybuybutton', $this->showButton ? 'true' : 'false');
-        if (!is_null($this->successUrl)) {
+        if ( $this->successUrl !== null ) {
             $button->pushValue('success_url', $this->successUrl);
         }
-        if (!is_null($this->declineUrl)) {
+        if ( $this->declineUrl !== null ) {
             $button->pushValue('decline_url', $this->declineUrl);
         }
-        if (!is_null($this->productId)) {
+        if ( $this->productId !== null ) {
             $button->pushValue('productpublicid', $this->productId);
         }
         foreach ($this->customParams as $key => $value) {
             $button->pushValue($key, $value);
         }
-        if (!is_null($this->userInfo)) {
+        if ( $this->userInfo !== null ) {
             foreach ($this->userInfo->toHashMap() as $k => $v) {
                 $button->pushValue($k, $v);
             }
         }
-        $customProduct = [];
+        $customProduct = array();
         foreach ($this->customProducts as $product) {
             $customProduct[] = $product->toHashMap();
         }

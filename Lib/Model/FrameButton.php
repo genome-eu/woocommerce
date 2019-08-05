@@ -31,16 +31,15 @@ class FrameButton extends BaseButton
         $this->pushValue('width', $width);
     }
 
-    /** @return string */
     public function build()
     {
         $body = "src='". $this->baseHost . $this->builderScriptName . ".js' ";
         foreach ($this->fieldList as $key => $value) {
-            $body  .= "data-" . $key . "='" . $value . "' ";
+            $body  .= 'data-' . $key . "='" . $value . "' ";
         }
 
         $this->buttonCode = $this->codeStart .
             $body .
-            str_replace("#sign", $this->fieldList['signature'], $this->codeEnd);
+            str_replace( '#sign', $this->fieldList['signature'], $this->codeEnd);
     }
 }
