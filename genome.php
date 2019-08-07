@@ -67,21 +67,56 @@ function wc_genome_gateway_plugin_links( $links ) {
 
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'wc_genome_gateway_plugin_links' );
 
-/**
- * Genome Payment Gateway
- *
- * Provides an Genome Payment Gateway;
- * We load it later to ensure WC is loaded first since we're extending it.
- *
- * @class WC_Genome_Gateway
- * @extends WC_Genome_Gateway
- * @version 1.0.0
- * @package WooCommerce/Classes/Payment
- * @author dinarys LLC
- */
 add_action( 'plugins_loaded', 'wc_genome_gateway_init', 11 );
 
 function wc_genome_gateway_init() {
+	class OrderInfo {
+		private $orderId;
+		private $reference;
+
+		/**
+		 * @param int $orderId
+		 * @param string $reference
+		 */
+		public function __construct( $orderId, $reference ) {
+			if ( ! is_int( $orderId ) ) {
+				throw new InvalidArgumentException( 'OrderId must be integer' );
+			}
+			if ( ! is_string( $reference ) ) {
+				throw new InvalidArgumentException( 'Reference must be string' );
+			}
+
+			$this->orderId   = $orderId;
+			$this->reference = $reference;
+		}
+
+		/**
+		 * @return int
+		 */
+		public function getOrderId() {
+			return $this->orderId;
+		}
+
+		/**
+		 * @return string
+		 */
+		public function getReference() {
+			return $this->reference;
+		}
+	}
+
+	/**
+	 * Genome Payment Gateway
+	 *
+	 * Provides an Genome Payment Gateway;
+	 * We load it later to ensure WC is loaded first since we're extending it.
+	 *
+	 * @class WC_Genome_Gateway
+	 * @extends WC_Genome_Gateway
+	 * @version 1.0.0
+	 * @package WooCommerce/Classes/Payment
+	 * @author dinarys LLC
+	 */
 	class WC_Genome_Gateway extends WC_Payment_Gateway {
 		public $public_key;
 		public $secret_key;
@@ -92,7 +127,8 @@ function wc_genome_gateway_init() {
 			$this->icon               = apply_filters( 'woocommerce_offline_icon', '' );
 			$this->has_fields         = false;
 			$this->method_title       = __( 'Genome', 'wc-genome-offline' );
-			$this->method_description = __( 'Allows using Genome for payments.', 'wc-genome-offline' );
+			$this->method_description = __( 'Allows using Genome for payments.', 'wc-genome-offline' ) . '<br>' .
+			                            __( 'You need to setup the following callback url in your application:', 'wc-genome-offline' ) . ' ' . get_home_url() . '?wc-api=wc_' . $this->id;
 
 			// Load the settings.
 			$this->init_form_fields();
@@ -231,6 +267,17 @@ function wc_genome_gateway_init() {
 		}
 
 		/**
+		 * @param string $body
+		 * @param string $signature
+		 * @return bool
+		 */
+		public function validate_callback2( $body, $signature ) {
+			$scriney = new Scriney( $this->public_key, $this->secret_key );
+
+			return $scriney->validateCallback2( $body, $signature );
+		}
+
+		/**
 		 * @param int $order_id
 		 * @return bool
 		 */
@@ -263,27 +310,46 @@ function wc_genome_gateway_init() {
 		}
 
 		public function genome_payment_completed() {
-			$x = file_get_contents( 'php://input' );
-			var_dump($_POST);
-			var_dump($x);
+			$order_info = $this->validateSuccessAndGetOrderInfo();
+			$order      = new WC_Order( $order_info->getOrderId() );
+			$order->payment_complete();
+			$order->add_order_note( 'Payment completed (transaction id: ' . $order_info->getReference() . ')', 0, true );
+			echo 'OK';
+			exit();
+		}
+
+		/**
+		 * @return OrderInfo
+		 */
+		private function validateSuccessAndGetOrderInfo() {
+			$input = file_get_contents( 'php://input' );
+			if ( $input !== '' ) {
+				$signature = null;
+				foreach ( getallheaders() as $name => $value ) {
+					if ( $name === 'X-Signature' ) {
+						$signature = $value;
+						break;
+					}
+				}
+				if ( $signature === null ) {
+					throw new RuntimeException( 'No signature in request' );
+				}
+				$decoded = json_decode( $input, true );
+				if ( ! is_array( $decoded ) ) {
+					throw new RuntimeException( 'Unable to decode callback' );
+				}
+				$order_id = (int) trim( strip_tags( $decoded['productList'][0]['productId'] ) );
+				if ( $decoded['status'] === 'success' && $this->validate_callback2( $input, $signature ) ) {
+					return new OrderInfo( $order_id, $decoded['reference'] );
+				}
+			}
 			if ( isset( $_POST['transactionId'], $_POST['productList'] ) && ! empty( $_POST['productList'] ) ) {
 				$order_id = (int) trim( strip_tags( $_POST['productList'][0]['productId'] ) );
-
-				$order = new WC_Order( $order_id );
-
 				if ( ( $_POST['status'] === 'success' ) && $this->genome_redirect_form_validate() ) {
-					$order->payment_complete();
-					$order->add_order_note( 'Payment completed (transaction id: ' . $_POST['transactionId'] . ')',
-						0,
-						true );
-
+					return new OrderInfo( $order_id, $_POST['transactionId'] );
 				}
-
-				echo 'OK';
-
 			}
-
-			exit();
+			throw new RuntimeException( 'Unsupported callback' );
 		}
 	}
 }
