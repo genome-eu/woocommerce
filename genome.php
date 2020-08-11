@@ -3,7 +3,7 @@
  * Plugin Name: Genome
  * Description: Genome Payment Gateway for Woocommerce
  * Author: dinarys LLC
- * Version: 1.0
+ * Version: 1.1
  * Text Domain: wc-gemome-gateway
  * Domain Path: /i18n/languages/
  *
@@ -18,6 +18,8 @@ use Genome\Lib\Util\SignatureHelper;
 use Genome\Lib\Util\StringHelper;
 
 defined( 'ABSPATH' ) or exit;
+
+define('WCGatewayGenomePluginUrl', plugin_dir_url(__FILE__));
 
 if ( ! in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ), true ) ) {
 	return;
@@ -121,10 +123,14 @@ function wc_genome_gateway_init() {
 		public $public_key;
 		public $secret_key;
 		public $instructions;
+		/**
+		 * Genome image location
+		 */
+		const GENOME_LOGO = 'assets/images/genome_mastercard_visa.svg';
 
 		public function __construct() {
 			$this->id                 = 'genome_gateway';
-			$this->icon               = apply_filters( 'woocommerce_offline_icon', '' );
+			$this->icon               = apply_filters( 'woocommerce_genome_icon', WCGatewayGenomePluginUrl.$this::GENOME_LOGO );
 			$this->has_fields         = false;
 			$this->method_title       = __( 'Genome', 'wc-genome-offline' );
 			$this->method_description = __( 'Allows using Genome for payments.', 'wc-genome-offline' ) . '<br>' .
