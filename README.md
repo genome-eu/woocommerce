@@ -39,5 +39,8 @@ __*You can select the radio button next to this option to make it the default ga
 * __Secret_key__  – enter your secret key obtained from Genome account. 
 * __Save Changes.__ 
 
+### 1.1
+* Added card brand icons
+
 ### 1.0
 * First Release.
