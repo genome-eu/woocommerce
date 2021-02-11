@@ -75,21 +75,31 @@ function wc_genome_gateway_init() {
 	class OrderInfo {
 		private $orderId;
 		private $reference;
+		private $orderStatus;
+		private $orderResponseMessage;
 
 		/**
 		 * @param int $orderId
 		 * @param string $reference
 		 */
-		public function __construct( $orderId, $reference ) {
+		public function __construct( $orderId, $reference, $orderStatus, $orderResponseMessage ) {
 			if ( ! is_int( $orderId ) ) {
 				throw new InvalidArgumentException( 'OrderId must be integer' );
 			}
 			if ( ! is_string( $reference ) ) {
 				throw new InvalidArgumentException( 'Reference must be string' );
 			}
+			if ( ! is_string( $orderStatus ) ) {
+				throw new InvalidArgumentException( 'orderStatus must be string' );
+			}
+			if ( ! is_string( $orderResponseMessage ) ) {
+				throw new InvalidArgumentException( 'orderMessage must be string' );
+			}
 
 			$this->orderId   = $orderId;
 			$this->reference = $reference;
+			$this->orderStatus = $orderStatus;
+			$this->orderResponseMessage = $orderResponseMessage;
 		}
 
 		/**
@@ -104,6 +114,20 @@ function wc_genome_gateway_init() {
 		 */
 		public function getReference() {
 			return $this->reference;
+		}
+		
+		/**
+		 * @return string
+		 */
+		public function getOrderStatus() {
+			return $this->orderStatus;
+		}
+		
+		/**
+		 * @return string
+		 */
+		public function getOrderResponseMessage() {
+			return $this->orderResponseMessage;
 		}
 	}
 
@@ -237,6 +261,43 @@ function wc_genome_gateway_init() {
 			} else {
 				$baseUrl .= '?';
 			}
+			
+			$locale = get_locale();
+			
+			/*locale flow*/
+			if($locale == 'ru_RU'){
+				$lang = "ru-RU";
+			}elseif($locale == 'de_DE'){
+				$lang = "de-DE";
+			}elseif($locale == 'fr_FR'){
+				$lang = "fr-FR";
+			}elseif($locale == 'pt_PT'){
+				$lang = "pt-PT";
+			}elseif($locale == 'it_IT'){
+				$lang = "it-IT";
+			}elseif($locale == 'es_ES'){
+				$lang = "es-ES";
+			}elseif($locale == 'tr_TR'){
+				$lang = "tr-TR";
+			}elseif($locale == 'sv_SE'){
+				$lang = "sv-SE";
+			}elseif($locale == 'nn_NO'){
+				$lang = "no-NO";
+			}elseif($locale == 'da_DK'){
+				$lang = "da-DA";
+			}elseif($locale == 'fi'){
+				$lang = "fl-FL";
+			}elseif($locale == 'nl_NL'){
+				$lang = "nl-NL";
+			}elseif($locale == 'ga'){
+				$lang = "en-GA";
+			}elseif($locale == 'pl_PL'){
+				$lang = "pl-PL";
+			}elseif($locale == 'lt_LT'){
+				$lang = "lt-LT";
+			}else{
+				$lang = "en-US";
+			}
 
 			$productData[] = array(
 				'productType' => 'fixedProduct',
@@ -251,8 +312,15 @@ function wc_genome_gateway_init() {
 				'email'         => $order->get_billing_email(),
 				'key'           => $this->public_key,
 				'uniqueuserid'  => $order->get_billing_email(),
+				'firstname'     => $order->get_billing_first_name(),
+				'lastname'      => $order->get_billing_last_name(),
+				'city'          => $order->get_billing_city(),
+				'phone'         => $order->get_billing_phone(),
+				'address'       => $order->get_billing_address_1(),
+				'zip'           => $order->get_billing_postcode(),
 				'success_url'   => $baseUrl,
 				'decline_url'   => $baseUrl,
+				'locale'		=> $lang,
 			);
 
 			$helper    = new SignatureHelper();
@@ -316,18 +384,27 @@ function wc_genome_gateway_init() {
 		}
 
 		public function genome_payment_completed() {
-			$order_info = $this->validateSuccessAndGetOrderInfo();
+			$order_info = $this->validateStatusAndGetOrderInfo();
 			$order      = new WC_Order( $order_info->getOrderId() );
-			$order->payment_complete();
-			$order->add_order_note( 'Payment completed (transaction id: ' . $order_info->getReference() . ')', 0, true );
-			echo 'OK';
-			exit();
+			if ($order_info->getOrderStatus() === 'success') {
+				$order->payment_complete();
+				WC()->cart->empty_cart();
+				$order->add_order_note( 'Payment completed (transaction id: ' . $order_info->getReference() . ')', 0, true );
+				echo 'OK';
+				exit();
+			}
+			else {
+				$order->update_status('failed');
+				$order->add_order_note( 'The payment was failed due to ' .$order_info->getOrderResponseMessage(). ' (transaction id: ' . $order_info->getReference() . ')', 0, true );
+				echo 'OK';
+				exit();
+			}
 		}
 
 		/**
 		 * @return OrderInfo
 		 */
-		private function validateSuccessAndGetOrderInfo() {
+		private function validateStatusAndGetOrderInfo() {
 			$input = file_get_contents( 'php://input' );
 			if ( $input !== '' ) {
 				$signature = null;
@@ -345,17 +422,18 @@ function wc_genome_gateway_init() {
 					throw new RuntimeException( 'Unable to decode callback' );
 				}
 				$order_id = (int) trim( strip_tags( $decoded['productList'][0]['productId'] ) );
-				if ( $decoded['status'] === 'success' && $this->validate_callback2( $input, $signature ) ) {
-					return new OrderInfo( $order_id, $decoded['reference'] );
+				if ( $decoded['status'] === 'success' || $decoded['status'] === 'decline' || $decoded['status'] === 'error' && $this->validate_callback2( $input, $signature ) ) {
+					return new OrderInfo(  $order_id, $decoded['reference'], $decoded['status'], $decoded['message'] );
 				}
 			}
 			if ( isset( $_POST['transactionId'], $_POST['productList'] ) && ! empty( $_POST['productList'] ) ) {
 				$order_id = (int) trim( strip_tags( $_POST['productList'][0]['productId'] ) );
 				if ( ( $_POST['status'] === 'success' ) && $this->genome_redirect_form_validate() ) {
-					return new OrderInfo( $order_id, $_POST['transactionId'] );
+					return new OrderInfo( $order_id, $_POST['transactionId'], $_POST['status'] );
 				}
 			}
 			throw new RuntimeException( 'Unsupported callback' );
 		}
 	}
 }
+
